@@ -14,9 +14,9 @@ LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.txt")
 with open(CONFIG_FILE, "r") as f:
     config = json.load(f)
 
-DISCORD_TOKEN = os.environ["discord_token"]
-WIGLE_API_TOKEN = os.environ["wigle_api_token"]
-WDGWARS_API_KEY = os.environ["wdgwars_api_key"]
+DISCORD_TOKEN = config["discord_token"]
+WIGLE_API_TOKEN = config["wigle_api_token"]
+WDGWARS_API_KEY = config["wdgwars_api_key"]
 
 color = 0xBF00FF  # Purple
 
