@@ -146,7 +146,7 @@ def stats_embed(stats):
     rank = stats.get("rank", "Unknown").title()
 
     embed.add_field(name="🏆 Rank",value=f"{level} - {title} ({rank})",inline=False)
-    embed.add_field(name="⌛ Progress",value=f"{stats.get('pct', 0)}%",inline=False)
+    embed.add_field(name="⌛ Progress to Next Level",value=f"{stats.get('pct', 0)}%",inline=False)
     embed.add_field(name="🏅 Badges",value=str(stats.get("badges", 0)),inline=False)
     embed.add_field(name="👁️ Spectrum",value=stats.get("spectrum", "Unknown"),inline=False)
     embed.add_field(name="📡 WiFi",value=f"{stats.get('wifi', 0):,}",inline=False)
@@ -202,7 +202,7 @@ def compare_embed(stats1, stats2):
     pct2_display = f"{pct2}% 🏆" if pct2 > pct1 else f"{pct2}%"
 
     embed.add_field(
-        name="⌛ Progress",
+        name="⌛ Progress to Next Level",
         value=(
             f"{username1}: {pct1_display}\n"
             f"{username2}: {pct2_display}"
@@ -563,7 +563,7 @@ async def stats_command(interaction: discord.Interaction, username: str):
 
         print(f"[STATS] Error: {e}")
 
-@bot.tree.command(name="compare",description="Compare WDGW stats between two players.")
+@bot.tree.command(name="compare",description="Compare WDGWars stats between two players.")
 @app_commands.describe(username1="First WDGWars username",username2="Second WDGWars username")
 async def compare_command(
     interaction: discord.Interaction,
@@ -579,7 +579,7 @@ async def compare_command(
         await interaction.followup.send(
             embed=error_embed(
                 "🚫 Comparison Failed!",
-                "Please provide two WDGW usernames."
+                "Please provide two WDGWars usernames."
             )
         )
         return
@@ -654,7 +654,7 @@ async def compare_command(
 
         print(f"[COMPARE] Error: {e}")
 
-@bot.tree.command(name="help", description="Displays help information for WDGWars Uploader.")
+@bot.tree.command(name="help", description="Displays help information for WDGWars Sidekick.")
 async def help_command(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=False)
 
@@ -666,8 +666,8 @@ async def help_command(interaction: discord.Interaction):
         "- Allow time for processing after an initial WiGLE upload.\n"
         "- The bot will only pull the most recent upload to WiGLE.\n")
 
-    embed = discord.Embed(title="WDGWars Uploader Information", description=help_text, color=color)
-    embed.set_footer(text="WDGWars Uploader by Kavitate")
+    embed = discord.Embed(title="WDGWars Sidekick Information", description=help_text, color=color)
+    embed.set_footer(text="WDGWars Sidekick by Kavitate")
     embed.set_image(url="https://i.imgur.com/XpcN6uA.png")
 
     view = HelpView()
