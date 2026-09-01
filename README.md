@@ -1,12 +1,15 @@
 <h1 align="center">:pager::satellite: Watch Dogs Go Wars Discord Bot Sidekick :satellite::pager:</h1>
 
 ## Screenshots
-<table> <tr> <td align="center"> <strong>/stats</strong> </td> <td align="center"> <strong>/compare</strong> </td> </tr> <tr> <td align="center"> <img src="https://i.imgur.com/wrA7XGq.png" width="400"> </td> <td align="center"> <img src="https://i.imgur.com/OjIcNsu.png" width="400"> </td> </tr> </table>
+<table> <tr> <td align="center"> <strong>/stats</strong> </td> <td align="center"> <strong>/compare</strong> </td> </tr> <tr> <td align="center"> <img src="https://i.imgur.com/W5Bid1S.png" width="400"> </td> <td align="center"> <img src="https://i.imgur.com/1X06y5F.png" width="400"> </td> </tr> </table>
 
 ## Purpose
 Users can pull their stats or the stats of other users utilizing the `/stats` command.
 
 Compare the stats of two different users utilizing the `/compare` command.
+
+Note that the badges and badge totals exclude the "State" badges to prevent the doxxing of users.
+This is done at the API endpoint, not through the bot so users will have a slightly higher badge total when viewing their profile on wdgwars.pl.
 
 This bot previously had a `/sync` command that would pull your last WiGLE upload and push it to WDGWars.
 The command has since been removed as it is much easier to upload to both WiGLE and WDGWars utilizing the [Wardrive Go](https://play.google.com/store/apps/details?id=com.rocketgod.wardrive) Android App.
