@@ -1,7 +1,7 @@
 <h1 align="center">:pager::satellite: Watch Dogs Go Wars Discord Bot Sidekick :satellite::pager:</h1>
 
 ## Screenshots
-<table> <tr> <td align="center"> <strong>/stats</strong> </td> <td align="center"> <strong>/compare</strong> </td> </tr> <tr> <td align="center"> <img src="https://i.imgur.com/W5Bid1S.png" width="400"> </td> <td align="center"> <img src="https://i.imgur.com/1X06y5F.png" width="400"> </td> </tr> </table>
+<table> <tr> <td align="center"> <strong>/stats</strong> </td> <td align="center"> <strong>/compare</strong> </td> </tr> <tr> <td align="center"> <img src="https://i.imgur.com/8p7rAVe.png" width="400"> </td> <td align="center"> <img src="https://i.imgur.com/L7JuVuG.png" height="1000" width="400"> </td> </tr> </table>
 
 ## Purpose
 Users can pull their stats or the stats of other users utilizing the `/stats` command.
