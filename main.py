@@ -230,8 +230,8 @@ def stats_embed(card_stats, api_stats):
     ble = stats.get("ble", 0)
     aircraft = stats.get("aircraft", 0)
     mesh = stats.get("mesh", 0)
-    total = card_stats.get("total", 0)
-    badges = api_stats.get("badges", [])
+    total = stats.get("total", 0)
+    badges = stats.get("badges", [])
     joined = format_join_date(api_stats.get("joined", "Unknown"))
     recent_today = api_stats.get("recent_today", 0)
     recent_7d = api_stats.get("recent_7d", 0)
@@ -300,8 +300,8 @@ def compare_embed(card_stats1, api_stats1, card_stats2, api_stats2):
     mesh1 = stats1.get("mesh", 0)
     mesh2 = stats2.get("mesh", 0)
 
-    total1 = card_stats1.get("total", 0)
-    total2 = card_stats2.get("total", 0)
+    total1 = stats1.get("total", 0)
+    total2 = stats2.get("total", 0)
 
     joined1 = format_join_date(api_stats1.get("joined", "Unknown"))
     joined2 = format_join_date(api_stats2.get("joined", "Unknown"))
