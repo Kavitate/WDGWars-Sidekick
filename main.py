@@ -7,7 +7,7 @@ from datetime import datetime
 from urllib.parse import quote
 from discord import app_commands
 from discord import ButtonStyle
-from discord.ui import Button, View
+from discord.ui import Button, View, Select
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
@@ -22,6 +22,7 @@ color = 0xBF00FF  # Purple
 # Endpoints
 WDGWARS_CARD_URL = "https://wdgwars.pl/card/{}.json"
 WDGWARS_API_STATS_URL = "https://wdgwars.pl/api/users/{}/stats"
+WDGWARS_LEADERBOARD_URL = "https://wdgwars.pl/api/leaderboard"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -214,6 +215,40 @@ async def get_combined_wdgwars_stats(session, username):
         )
 
     return card_stats, api_stats, None
+
+
+async def get_wdgwars_leaderboard(session):
+    url = WDGWARS_LEADERBOARD_URL
+
+    headers = {
+        "User-Agent": "wigle-wdgwars-discord-bot/1.0",
+        "X-API-Key": WDGWARS_API_KEY,
+    }
+
+    try:
+        async with session.get(url, headers=headers) as resp:
+
+            if resp.status == 401:
+                return None, "WDGWars API key is invalid or unauthorized."
+
+            if resp.status == 403:
+                return None, "Access to the WDGWars leaderboard was denied."
+
+            if resp.status == 429:
+                return None, "WDGWars API rate limit reached. Please try again shortly."
+
+            if resp.status != 200:
+                return None, f"WDGWars leaderboard API returned HTTP {resp.status}"
+
+            data = await resp.json()
+
+            return data, None
+
+    except aiohttp.ClientError as e:
+        return None, f"Network error: {e}"
+
+    except Exception as e:
+        return None, f"Unexpected error: {e}"
 
 
 def stats_embed(card_stats, api_stats):
@@ -497,6 +532,164 @@ def compare_embed(card_stats1, api_stats1, card_stats2, api_stats2):
     return embed
 
 
+def leaderboard_embed(category, entries, as_of=None):
+    titles = {
+        "today": "☀️ WDGWars Leaderboard — Today",
+        "week": "📆 WDGWars Leaderboard — This Week",
+        "all_time": "🏆 WDGWars Leaderboard — All-Time",
+        "gangs": "🏴‍☠️ WDGWars Leaderboard — Gangs",
+        "hunters": "🎯 WDGWars Leaderboard — Bounty Hunters",
+    }
+
+    embed = discord.Embed(
+        title=titles.get(category, "🏆 WDGWars Leaderboard"),
+        color=color,
+    )
+
+    entries = entries[:25]
+
+    if not entries:
+        embed.description = "No leaderboard data is currently available."
+        return embed
+
+    lines = []
+
+    if category in ("today", "week", "all_time"):
+        for position, entry in enumerate(entries, start=1):
+            username = str(entry.get("username", "Unknown"))
+            total = entry.get("total", 0)
+
+            lines.append(
+                f"`{position:02}` {username} — **{total:,}**"
+            )
+
+    elif category == "gangs":
+        for position, entry in enumerate(entries, start=1):
+            name = str(entry.get("name", "Unknown"))
+            member_count = entry.get("member_count", 0)
+            ap_count = entry.get("ap_count", 0)
+
+            lines.append(
+                f"`{position:02}` {name} — "
+                f"**{ap_count:,}** with {member_count:,} members"
+            )
+
+    elif category == "hunters":
+        for position, entry in enumerate(entries, start=1):
+            username = str(entry.get("username", "Unknown"))
+            completed = entry.get("completed", 0)
+            earned = entry.get("earned", 0)
+
+            lines.append(
+                f"`{position:02}` **{username}** — "
+                f"{completed:,} completed "
+                f"with {earned:,} earned"
+            )
+
+    embed.description = "\n".join(lines)
+
+    if as_of:
+        try:
+            date = datetime.strptime(as_of, "%Y-%m-%d")
+            formatted_as_of = date.strftime("%-d %B %Y")
+        except (ValueError, TypeError):
+            formatted_as_of = as_of
+    else:
+        formatted_as_of = "Unknown"
+
+    return embed
+
+class LeaderboardSelect(Select):
+    def __init__(self, leaderboard_data, user_id):
+        self.leaderboard_data = leaderboard_data
+        self.user_id = user_id
+
+        options = [
+            discord.SelectOption(
+                label="Today",
+                value="today",
+                emoji="☀️",
+                description="Top 25 players today",
+            ),
+            discord.SelectOption(
+                label="This Week",
+                value="week",
+                emoji="📆",
+                description="Top 25 players this week",
+            ),
+            discord.SelectOption(
+                label="All-Time",
+                value="all_time",
+                emoji="🏆",
+                description="Top 25 players of all time",
+            ),
+            discord.SelectOption(
+                label="Gangs",
+                value="gangs",
+                emoji="🏴‍☠️",
+                description="Top 25 gangs",
+            ),
+            discord.SelectOption(
+                label="Bounty Hunters",
+                value="hunters",
+                emoji="🎯",
+                description="Top 25 bounty hunters",
+            ),
+        ]
+
+        super().__init__(
+            placeholder="Select a leaderboard...",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        category = self.values[0]
+
+        entries = self.leaderboard_data.get(category, [])
+
+        embed = leaderboard_embed(
+            category,
+            entries,
+            self.leaderboard_data.get("_as_of"),
+        )
+
+        await interaction.response.edit_message(
+            embed=embed,
+            view=self.view,
+        )
+
+
+class LeaderboardView(View):
+    def __init__(self, leaderboard_data, user_id):
+        super().__init__(timeout=300)
+
+        self.user_id = user_id
+        self.leaderboard_data = leaderboard_data
+
+        self.add_item(
+            LeaderboardSelect(
+                leaderboard_data,
+                user_id,
+            )
+        )
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user.id != self.user_id:
+            await interaction.response.send_message(
+                "Only the person who ran `/leaderboard` can use this menu.",
+                ephemeral=True,
+            )
+            return False
+
+        return True
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+
+
 @bot.tree.command(name="stats", description="Look up WDGWars stats for a player.")
 @app_commands.describe(username="The WDGWars username to look up")
 async def stats_command(interaction: discord.Interaction, username: str):
@@ -693,6 +886,85 @@ async def compare_command(
         print(f"[COMPARE] Error: {e}")
 
 
+@bot.tree.command(name="leaderboards",description="View WDGWars leaderboards.")
+async def leaderboard_command(interaction: discord.Interaction):
+
+    try:
+        await interaction.response.defer(thinking=True)
+
+    except discord.NotFound:
+        print("[LEADERBOARD] Discord interaction expired before defer.")
+        return
+
+    except discord.HTTPException as e:
+        print(f"[LEADERBOARD] Failed to defer interaction: {e}")
+        return
+
+    try:
+        async with aiohttp.ClientSession() as session:
+
+            leaderboard_data, error = await get_wdgwars_leaderboard(
+                session
+            )
+
+        if error or not leaderboard_data:
+            await send_ephemeral_error(
+                interaction,
+                "🚫 Leaderboard Lookup Failed!",
+                error or "Leaderboard data was unavailable.",
+            )
+            return
+
+        category = "today"
+
+        entries = leaderboard_data.get(category, [])
+
+        embed = leaderboard_embed(
+            category,
+            entries,
+            leaderboard_data.get("_as_of"),
+        )
+
+        view = LeaderboardView(
+            leaderboard_data,
+            interaction.user.id,
+        )
+
+        await interaction.followup.send(
+            embed=embed,
+            view=view,
+        )
+
+        print(
+            f"[LEADERBOARD] {interaction.user} "
+            f"viewed the WDGWars leaderboard."
+        )
+
+    except aiohttp.ClientError as e:
+        await send_ephemeral_error(
+            interaction,
+            "🚫 Leaderboard Lookup Failed!",
+            f"Network error: `{e}`",
+        )
+
+        print(f"[LEADERBOARD] Network error: {e}")
+
+    except discord.NotFound:
+        print(
+            "[LEADERBOARD] Discord interaction expired before "
+            "the follow-up response could be sent."
+        )
+
+    except Exception as e:
+        await send_ephemeral_error(
+            interaction,
+            "🚫 Leaderboard Lookup Failed!",
+            f"Unexpected error: `{e}`",
+        )
+
+        print(f"[LEADERBOARD] Error: {e}")
+
+
 @bot.tree.command(name="help", description="Displays help information for WDGWars Sidekick.")
 async def help_command(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=False)
@@ -701,6 +973,7 @@ async def help_command(interaction: discord.Interaction):
         "**Command List**\n"
         "`/stats` - Displays a user's WDGWars stats.\n"
         "`/compare` - Compares WDGWars stats between two users.\n"
+        "`/leaderboard` - Displays WDGWars leaderboards.\n"
     )
 
     embed = discord.Embed(
