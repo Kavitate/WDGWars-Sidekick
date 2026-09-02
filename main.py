@@ -581,9 +581,9 @@ def leaderboard_embed(category, entries, as_of=None):
             earned = entry.get("earned", 0)
 
             lines.append(
-                f"`{position:02}` **{username}** — "
-                f"{completed:,} completed "
-                f"with {earned:,} earned"
+                f"`{position:02}` {username} — "
+                f"**{completed:,}** completed "
+                f"with **{earned:,}** earned"
             )
 
     embed.description = "\n".join(lines)
@@ -663,22 +663,19 @@ class LeaderboardSelect(Select):
 
 class LeaderboardView(View):
     def __init__(self, leaderboard_data, user_id):
-        super().__init__(timeout=300)
-
+        super().__init__(timeout=60)  # 1 minute
         self.user_id = user_id
         self.leaderboard_data = leaderboard_data
+        self.message = None
 
         self.add_item(
-            LeaderboardSelect(
-                leaderboard_data,
-                user_id,
-            )
+            LeaderboardSelect(leaderboard_data, user_id)
         )
 
-    async def interaction_check(self, interaction: discord.Interaction):
+    async def interaction_check(self, interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message(
-                "Only the person who ran `/leaderboard` can use this menu.",
+                "Only the person who ran `/leaderboards` can use this menu.",
                 ephemeral=True,
             )
             return False
@@ -686,8 +683,17 @@ class LeaderboardView(View):
         return True
 
     async def on_timeout(self):
-        for item in self.children:
-            item.disabled = True
+        try:
+            if self.message:
+                await self.message.edit(view=None)
+
+        except discord.NotFound:
+            pass
+
+        except discord.HTTPException as e:
+            print(
+                f"[LEADERBOARD] Failed to remove expired dropdown: {e}"
+            )
 
 
 @bot.tree.command(name="stats", description="Look up WDGWars stats for a player.")
@@ -927,13 +933,16 @@ async def leaderboard_command(interaction: discord.Interaction):
 
         view = LeaderboardView(
             leaderboard_data,
-            interaction.user.id,
+            interaction.user.id
         )
 
-        await interaction.followup.send(
+        message = await interaction.followup.send(
             embed=embed,
             view=view,
+            wait=True,
         )
+
+        view.message = message
 
         print(
             f"[LEADERBOARD] {interaction.user} "
@@ -973,7 +982,7 @@ async def help_command(interaction: discord.Interaction):
         "**Command List**\n"
         "`/stats` - Displays a user's WDGWars stats.\n"
         "`/compare` - Compares WDGWars stats between two users.\n"
-        "`/leaderboard` - Displays WDGWars leaderboards.\n"
+        "`/leaderboards` - Displays WDGWars leaderboards.\n"
     )
 
     embed = discord.Embed(
