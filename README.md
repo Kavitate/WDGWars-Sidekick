@@ -8,6 +8,8 @@ Users can pull their stats or the stats of other users utilizing the `/stats` co
 
 Compare the stats of two different users utilizing the `/compare` command.
 
+View the top 25 leaderboards for today, this week, all-time, gangs, and bounty hunters utilizing the `/leaderboards` command.
+
 Note that the badges and badge totals exclude the "State" badges to prevent the doxxing of users.
 This is done at the API endpoint, not through the bot so users will have a slightly higher badge total when viewing their profile on wdgwars.pl.
 
@@ -25,4 +27,5 @@ Prior to using the bot the following variables must be changed in the `config.js
 Once the above variables have been updated, run the bot using the following commands:
 - `/stats` to pull a user's WDGWars stats.
 - `/compare` to compare WDGWars stats between two users.
+- `/leaderboards` to show the top 25 leaderboards for today, this week, all-time, gangs, and bounty hunters.
 - `/help` to display helpful information for the WDGWars Sidekick.
