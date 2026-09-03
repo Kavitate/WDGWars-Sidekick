@@ -266,7 +266,7 @@ def stats_embed(card_stats, api_stats):
     aircraft = stats.get("aircraft", 0)
     mesh = stats.get("mesh", 0)
     total = stats.get("total", 0)
-    badges = stats.get("badges", [])
+    badges = api_stats.get("badges", [])
     joined = format_join_date(api_stats.get("joined", "Unknown"))
     recent_today = api_stats.get("recent_today", 0)
     recent_7d = api_stats.get("recent_7d", 0)
